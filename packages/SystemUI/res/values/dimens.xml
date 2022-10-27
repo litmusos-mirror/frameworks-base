@@ -151,6 +151,10 @@
     <!-- The size of a bluetooth indicator icon that displays next to the RSSI status icon. -->
     <dimen name="status_bar_connected_device_bt_indicator_size">17dp</dimen>
 
+     <!-- Bluetooth dialog -->
+    <dimen name="bluetooth_dialog_active_device_bottom_margin">4dp</dimen>
+    <dimen name="bluetooth_dialog_toggle_height">56dp</dimen>
+
     <!-- Height of a small notification in the status bar-->
     <dimen name="notification_min_height">@*android:dimen/notification_min_height</dimen>
 
