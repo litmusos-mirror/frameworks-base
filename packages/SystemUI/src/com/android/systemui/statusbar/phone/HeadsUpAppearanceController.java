@@ -89,6 +89,8 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
     private final View mClockView;
     private final Optional<View> mOperatorNameViewOptional;
 
+    private LyricViewController mLyricViewController;
+
     @VisibleForTesting
     float mExpandedHeight;
     @VisibleForTesting
@@ -230,6 +232,10 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
         }
     }
 
+    public void setLyricViewController(LyricViewController controller) {
+        mLyricViewController = controller;
+    }
+
     private void setShown(boolean isShown) {
         if (mShown != isShown) {
             mShown = isShown;
@@ -254,9 +260,17 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
         }
     }
 
+    if (mLyricViewController != null) {
+        mLyricViewController.hideLyricView(mAnimationsEnabled);
+    }
+
     private void updateParentClipping(boolean shouldClip) {
         ViewClippingUtil.setClippingDeactivated(
                 mView, !shouldClip, mParentClippingParams);
+    }
+
+    if (mLyricViewController != null) {
+        mLyricViewController.showLyricView(mAnimationsEnabled);
     }
 
     /**

@@ -124,4 +124,10 @@ public interface NotificationEntryListener {
             NotificationChannel channel,
             int modificationType) {
     }
+
+        // update ticker only, LyricController will handle it
+        if ((notification.getNotification().flags & Notification.FLAG_ONLY_UPDATE_TICKER) != 0) {
+            return;
+        }
+        
 }
