@@ -217,7 +217,7 @@ enum class Style(internal val coreSpec: CoreSpec) {
 class ColorScheme(
     @ColorInt val seed: Int,
     val darkTheme: Boolean,
-    val style: Style = Style.TONAL_SPOT
+    val style: Style = Style.VIBRANT
 ) {
 
     val accent1: List<Int>
@@ -227,13 +227,13 @@ class ColorScheme(
     val neutral2: List<Int>
 
     constructor(@ColorInt seed: Int, darkTheme: Boolean) :
-            this(seed, darkTheme, Style.TONAL_SPOT)
+            this(seed, darkTheme, Style.VIBRANT)
 
     @JvmOverloads
     constructor(
         wallpaperColors: WallpaperColors,
         darkTheme: Boolean,
-        style: Style = Style.TONAL_SPOT
+        style: Style = Style.VIBRANT
     ) :
             this(getSeedColor(wallpaperColors, style != Style.CONTENT), darkTheme, style)
 
