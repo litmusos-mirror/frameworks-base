@@ -37,6 +37,8 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.service.vr.IVrManager;
 import android.service.vr.IVrStateCallbacks;
@@ -49,6 +51,7 @@ import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.settingslib.RestrictedLockUtilsInternal;
 import com.android.systemui.dagger.qualifiers.Background;
 import com.android.systemui.dagger.qualifiers.Main;
+import com.android.systemui.R;
 import com.android.systemui.settings.UserTracker;
 import com.android.systemui.statusbar.policy.BrightnessMirrorController;
 
@@ -74,6 +77,8 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
     private final float mMaximumBacklightForVr;
 
     private final int mDisplayId;
+    private final int mHapticEnabled;
+    private final Bool mLinearHaptics;
     private final Context mContext;
     private final ToggleSlider mControl;
     private final DisplayManager mDisplayManager;
@@ -83,6 +88,8 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
     private final Executor mMainExecutor;
     private final Handler mBackgroundHandler;
     private final BrightnessObserver mBrightnessObserver;
+
+    private Vibrator mVibrator;
 
     private final DisplayListener mDisplayListener = new DisplayListener() {
         @Override
@@ -301,7 +308,8 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
         mBackgroundHandler = bgHandler;
         mUserTracker = userTracker;
         mBrightnessObserver = new BrightnessObserver(mHandler);
-
+        mLinearHaptics = mContext.getBool(R.bool.config_deviceSupportsLinearHaptics);
+        mHapticEnabled = mContext.getInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
         mDisplayId = mContext.getDisplayId();
         PowerManager pm = context.getSystemService(PowerManager.class);
         mMinimumBacklightForVr = pm.getBrightnessConstraint(
@@ -312,6 +320,7 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
         mDisplayManager = context.getSystemService(DisplayManager.class);
         mVrManager = IVrManager.Stub.asInterface(ServiceManager.getService(
                 Context.VR_SERVICE));
+        mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     public void registerCallbacks() {
@@ -388,6 +397,11 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
 
     private void setBrightness(float brightness) {
         mDisplayManager.setTemporaryBrightness(mDisplayId, brightness);
+        if ((brightness != brightness+(mBrightnessMax/10))||(brightness != brightness-(mBrightnessMax/10))) {
+            if(mHapticEnabled ==1 && mLinearHaptics) {
+                mVibrator.vibrate(VibrationEffect.get(VibrationEffect.EFFECT_TICK));
+            }
+        }
     }
 
     private void updateVrMode(boolean isEnabled) {
