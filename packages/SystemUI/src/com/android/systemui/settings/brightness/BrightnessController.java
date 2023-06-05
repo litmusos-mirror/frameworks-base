@@ -78,7 +78,7 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
 
     private final int mDisplayId;
     private final int mHapticEnabled;
-    private final Bool mLinearHaptics;
+    private final boolean mLinearHaptics;
     private final Context mContext;
     private final ToggleSlider mControl;
     private final DisplayManager mDisplayManager;

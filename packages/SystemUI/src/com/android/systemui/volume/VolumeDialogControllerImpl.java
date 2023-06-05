@@ -144,7 +144,7 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
     private long mLastToggledRingerOn;
     private boolean mDeviceInteractive = true;
     private final int mHapticEnabled;
-    private final Bool mLinearHaptics;
+    private final boolean mLinearHaptics;
 
     private VolumePolicy mVolumePolicy;
     @GuardedBy("this")
