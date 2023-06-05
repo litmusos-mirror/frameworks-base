@@ -143,6 +143,8 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
     private boolean mShowSafetyWarning;
     private long mLastToggledRingerOn;
     private boolean mDeviceInteractive = true;
+    private final int mHapticEnabled;
+    private final Bool mLinearHaptics;
 
     private VolumePolicy mVolumePolicy;
     @GuardedBy("this")
@@ -209,6 +211,8 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
         mCaptioningManager = captioningManager;
         mKeyguardManager = keyguardManager;
         mActivityManager = activityManager;
+        mLinearHaptics = mContext.getBool(R.bool.config_deviceSupportsLinearHaptics);
+        mHapticEnabled = mContext.getInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
         dumpManager.registerDumpable("VolumeDialogControllerImpl", this);
 
         boolean accessibilityVolumeStreamActive = accessibilityManager
@@ -475,6 +479,16 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
         if (changed && fromKey) {
             Events.writeEvent(Events.EVENT_KEY, stream, lastAudibleStreamVolume);
         }
+        Handler handler = new Handler();
+        int delay = 64;
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mHapticEnabled ==1 && mLinearHaptics) {
+                    vibrate(VibrationEffect.EFFECT_CLICK);
+                }                 
+            }
+        }, delay);
         return changed;
     }
 
