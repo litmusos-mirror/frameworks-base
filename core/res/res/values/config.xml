@@ -1231,7 +1231,7 @@
          meanings. -->
     <integer name="config_defaultRingVibrationIntensity">2</integer>
     <!-- Add config to check if device has linear haptics motor support -->
-    <bool name="config_deviceSupportsLinearHaptics">false</integer>
+    <bool name="config_deviceSupportsLinearHaptics">false</bool>
 
     <!-- Whether to use the strict phone number matcher by default. -->
     <bool name="config_use_strict_phone_number_comparation">false</bool>
