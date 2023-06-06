@@ -75,7 +75,7 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
     private final float mMaximumBacklightForVr;
 
     private final int mDisplayId;
-    private final int mHapticEnabled;
+    private final boolean mHapticEnabled;
     private final boolean mLinearHaptics;
     private final Context mContext;
     private final ToggleSlider mControl;
@@ -307,7 +307,9 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
         mUserTracker = userTracker;
         mBrightnessObserver = new BrightnessObserver(mHandler);
         mLinearHaptics = mContext.getResources().getBoolean(com.android.internal.R.bool.config_deviceSupportsLinearHaptics);
-        mHapticEnabled = Integer.parseInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
+        if(Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 1) != 0){mHapticEnabled = true;}
+        else{mHapticEnabled = false;}
         mDisplayId = mContext.getDisplayId();
         PowerManager pm = context.getSystemService(PowerManager.class);
         mMinimumBacklightForVr = pm.getBrightnessConstraint(
@@ -396,7 +398,7 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
     private void setBrightness(float brightness) {
         mDisplayManager.setTemporaryBrightness(mDisplayId, brightness);
         if ((brightness != brightness+(mBrightnessMax/10))||(brightness != brightness-(mBrightnessMax/10))) {
-            if(mHapticEnabled ==1 && mLinearHaptics) {
+            if(mHapticEnabled && mLinearHaptics) {
                 mVibrator.vibrate(VibrationEffect.get(VibrationEffect.EFFECT_TICK));
             }
         }

@@ -143,7 +143,7 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
     private boolean mShowSafetyWarning;
     private long mLastToggledRingerOn;
     private boolean mDeviceInteractive = true;
-    private final int mHapticEnabled;
+    private final boolean mHapticEnabled;
     private final boolean mLinearHaptics;
 
     private VolumePolicy mVolumePolicy;
@@ -211,8 +211,10 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
         mCaptioningManager = captioningManager;
         mKeyguardManager = keyguardManager;
         mActivityManager = activityManager;
-        mLinearHaptics = mContext.getResources().getBoolean(com.android.internal.R.bool.config_deviceSupportsLinearHaptics);
-        mHapticEnabled = Integer.parseInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
+        mLinearHaptics = mContext.getResources().getBoolean(com.android.internal.R.bool.config_deviceSupportsLinearHaptics);   
+        if(Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 1) != 0){mHapticEnabled = true;}
+        else{mHapticEnabled = false;}
         dumpManager.registerDumpable("VolumeDialogControllerImpl", this);
 
         boolean accessibilityVolumeStreamActive = accessibilityManager
@@ -484,7 +486,7 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (mHapticEnabled ==1 && mLinearHaptics) {
+                if (mHapticEnabled && mLinearHaptics) {
                     mVibrator.vibrate(VibrationEffect.EFFECT_CLICK);
                 }                 
             }
