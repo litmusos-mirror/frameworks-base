@@ -62,7 +62,6 @@ import androidx.lifecycle.Observer;
 import com.android.internal.annotations.GuardedBy;
 import com.android.settingslib.volume.MediaSessions;
 import com.android.systemui.Dumpable;
-import com.android.systemui.R;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.dump.DumpManager;
@@ -73,6 +72,7 @@ import com.android.systemui.statusbar.VibratorHelper;
 import com.android.systemui.util.RingerModeLiveData;
 import com.android.systemui.util.RingerModeTracker;
 import com.android.systemui.util.concurrency.ThreadFactory;
+import com.android.systemui.R;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -211,8 +211,8 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
         mCaptioningManager = captioningManager;
         mKeyguardManager = keyguardManager;
         mActivityManager = activityManager;
-        mLinearHaptics = mContext.getBool(R.bool.config_deviceSupportsLinearHaptics);
-        mHapticEnabled = mContext.getInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
+        mLinearHaptics = mContext.getResources().getBoolean(com.android.internal.R.bool.config_deviceSupportsLinearHaptics);
+        mHapticEnabled = Integer.parseInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
         dumpManager.registerDumpable("VolumeDialogControllerImpl", this);
 
         boolean accessibilityVolumeStreamActive = accessibilityManager
@@ -485,7 +485,7 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
             @Override
             public void run() {
                 if (mHapticEnabled ==1 && mLinearHaptics) {
-                    vibrate(VibrationEffect.EFFECT_CLICK);
+                    mVibrator.vibrate(VibrationEffect.EFFECT_CLICK);
                 }                 
             }
         }, delay);

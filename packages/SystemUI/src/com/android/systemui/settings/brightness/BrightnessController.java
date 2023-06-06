@@ -51,10 +51,8 @@ import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.settingslib.RestrictedLockUtilsInternal;
 import com.android.systemui.dagger.qualifiers.Background;
 import com.android.systemui.dagger.qualifiers.Main;
-import com.android.systemui.R;
 import com.android.systemui.settings.UserTracker;
 import com.android.systemui.statusbar.policy.BrightnessMirrorController;
-
 import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
@@ -308,8 +306,8 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
         mBackgroundHandler = bgHandler;
         mUserTracker = userTracker;
         mBrightnessObserver = new BrightnessObserver(mHandler);
-        mLinearHaptics = mContext.getBool(R.bool.config_deviceSupportsLinearHaptics);
-        mHapticEnabled = mContext.getInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
+        mLinearHaptics = mContext.getResources().getBoolean(com.android.internal.R.bool.config_deviceSupportsLinearHaptics);
+        mHapticEnabled = Integer.parseInt(Settings.System.HAPTIC_FEEDBACK_ENABLED);
         mDisplayId = mContext.getDisplayId();
         PowerManager pm = context.getSystemService(PowerManager.class);
         mMinimumBacklightForVr = pm.getBrightnessConstraint(

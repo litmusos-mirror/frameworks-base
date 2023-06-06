@@ -1230,7 +1230,6 @@
          Settings.System.RING_VIBRATION_INTENSITY more details on the constant values and
          meanings. -->
     <integer name="config_defaultRingVibrationIntensity">2</integer>
-    <!-- Add config to check if device has linear haptics motor support -->
     <bool name="config_deviceSupportsLinearHaptics">false</bool>
 
     <!-- Whether to use the strict phone number matcher by default. -->
