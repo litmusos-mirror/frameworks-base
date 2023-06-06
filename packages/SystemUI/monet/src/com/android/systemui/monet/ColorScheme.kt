@@ -212,12 +212,19 @@ enum class Style(internal val coreSpec: CoreSpec) {
             n1 = TonalSpec(HueSource(), ChromaConstant(.0)),
             n2 = TonalSpec(HueSource(), ChromaConstant(.0))
     )),
+    PIXEL(CoreSpec(
+            a1 = TonalSpec(HueSource(), ChromaMaxOut()),
+            a2 = TonalSpec(HueVibrantSecondary(), ChromaConstant(24.0)),
+            a3 = TonalSpec(HueVibrantTertiary(), ChromaConstant(32.0)),
+            n1 = TonalSpec(HueSource(), ChromaConstant(4.0)),
+            n2 = TonalSpec(HueSource(), ChromaConstant(8.0))
+    )),
 }
 
 class ColorScheme(
     @ColorInt val seed: Int,
     val darkTheme: Boolean,
-    val style: Style = Style.VIBRANT
+    val style: Style = Style.PIXEL
 ) {
 
     val accent1: List<Int>
@@ -227,13 +234,13 @@ class ColorScheme(
     val neutral2: List<Int>
 
     constructor(@ColorInt seed: Int, darkTheme: Boolean) :
-            this(seed, darkTheme, Style.VIBRANT)
+            this(seed, darkTheme, Style.PIXEL)
 
     @JvmOverloads
     constructor(
         wallpaperColors: WallpaperColors,
         darkTheme: Boolean,
-        style: Style = Style.VIBRANT
+        style: Style = Style.PIXEL
     ) :
             this(getSeedColor(wallpaperColors, style != Style.CONTENT), darkTheme, style)
 
