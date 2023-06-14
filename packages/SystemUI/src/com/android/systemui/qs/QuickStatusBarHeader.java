@@ -20,34 +20,14 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Pair;
-import android.view.DisplayCutout;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowInsets;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.Space;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.android.internal.policy.SystemBarUtils;
-import com.android.settingslib.Utils;
 import com.android.systemui.R;
-import com.android.systemui.battery.BatteryMeterView;
-import com.android.systemui.statusbar.phone.StatusBarContentInsetsProvider;
-import com.android.systemui.statusbar.phone.StatusBarIconController.TintedIconManager;
-import com.android.systemui.statusbar.phone.StatusIconContainer;
-import com.android.systemui.statusbar.policy.Clock;
-import com.android.systemui.statusbar.policy.VariableDateView;
 import com.android.systemui.util.LargeScreenUtils;
-
-import java.util.List;
 
 /**
  * View that contains the top-most bits of the QS panel (primarily the status bar with date, time,
@@ -57,14 +37,6 @@ public class QuickStatusBarHeader extends FrameLayout {
 
     private boolean mExpanded;
     private boolean mQsDisabled;
-
-    @Nullable
-    private TouchAnimator mAlphaAnimator;
-    @Nullable
-    private TouchAnimator mTranslationAnimator;
-    @Nullable
-    private TouchAnimator mIconsAlphaAnimator;
-    private TouchAnimator mIconsAlphaAnimatorFixed;
 
     protected QuickQSPanel mHeaderQsPanel;
     private View mDatePrivacyView;
@@ -116,88 +88,12 @@ public class QuickStatusBarHeader extends FrameLayout {
         super(context, attrs);
     }
 
-    /**
-     * How much the view containing the clock and QQS will translate down when QS is fully expanded.
-     *
-     * This matches the measured height of the view containing the date and privacy icons.
-     */
-    public int getOffsetTranslation() {
-        return mTopViewMeasureHeight;
-    }
-
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-
         mHeaderQsPanel = findViewById(R.id.quick_qs_panel);
-        mDatePrivacyView = findViewById(R.id.quick_status_bar_date_privacy);
-        mStatusIconsView = findViewById(R.id.quick_qs_status_icons);
-        mQSCarriers = findViewById(R.id.carrier_group);
-        mContainer = findViewById(R.id.qs_container);
-        mIconContainer = findViewById(R.id.statusIcons);
-        mPrivacyChip = findViewById(R.id.privacy_chip);
-        mDateView = findViewById(R.id.date);
-        mClockDateView = findViewById(R.id.date_clock);
-        mClockIconsSeparator = findViewById(R.id.separator);
-        mRightLayout = findViewById(R.id.rightLayout);
-        mDateContainer = findViewById(R.id.date_container);
-        mPrivacyContainer = findViewById(R.id.privacy_container);
-
-        mClockContainer = findViewById(R.id.clock_container);
-        mClockView = findViewById(R.id.clock);
-        mDatePrivacySeparator = findViewById(R.id.space);
-        // Tint for the battery icons are handled in setupHost()
-        mBatteryRemainingIcon = findViewById(R.id.batteryRemainingIcon);
 
         updateResources();
-        Configuration config = mContext.getResources().getConfiguration();
-        setDatePrivacyContainersWidth(config.orientation == Configuration.ORIENTATION_LANDSCAPE);
-
-        // QS will always show the estimate, and BatteryMeterView handles the case where
-        // it's unavailable or charging
-        mBatteryRemainingIcon.setPercentShowMode(BatteryMeterView.MODE_ESTIMATE);
-
-        mIconsAlphaAnimatorFixed = new TouchAnimator.Builder()
-                .addFloat(mIconContainer, "alpha", 0, 1)
-                .addFloat(mBatteryRemainingIcon, "alpha", 0, 1)
-                .build();
-    }
-
-    void onAttach(TintedIconManager iconManager,
-            QSExpansionPathInterpolator qsExpansionPathInterpolator,
-            List<String> rssiIgnoredSlots,
-            StatusBarContentInsetsProvider insetsProvider,
-            boolean useCombinedQSHeader) {
-        mUseCombinedQSHeader = useCombinedQSHeader;
-        mTintedIconManager = iconManager;
-        mRssiIgnoredSlots = rssiIgnoredSlots;
-        mInsetsProvider = insetsProvider;
-        int fillColor = Utils.getColorAttrDefaultColor(getContext(),
-                android.R.attr.textColorPrimary);
-
-        // Set the correct tint for the status icons so they contrast
-        iconManager.setTint(fillColor);
-
-        mQSExpansionPathInterpolator = qsExpansionPathInterpolator;
-        updateAnimators();
-    }
-
-    void setIsSingleCarrier(boolean isSingleCarrier) {
-        mIsSingleCarrier = isSingleCarrier;
-        updateAlphaAnimator();
-    }
-
-    public QuickQSPanel getHeaderQsPanel() {
-        return mHeaderQsPanel;
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (mDatePrivacyView.getMeasuredHeight() != mTopViewMeasureHeight) {
-            mTopViewMeasureHeight = mDatePrivacyView.getMeasuredHeight();
-            post(this::updateAnimators);
-        }
     }
 
     @Override
@@ -235,8 +131,8 @@ public class QuickStatusBarHeader extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        // If using combined headers, only react to touches inside QuickQSPanel
-        if (!mUseCombinedQSHeader || event.getY() > mHeaderQsPanel.getTop()) {
+        // Only react to touches inside QuickQSPanel
+        if (event.getY() > mHeaderQsPanel.getTop()) {
             return super.onTouchEvent(event);
         } else {
             return false;
@@ -276,160 +172,24 @@ public class QuickStatusBarHeader extends FrameLayout {
         }
         setLayoutParams(lp);
 
-        int textColor = Utils.getColorAttrDefaultColor(mContext, android.R.attr.textColorPrimary);
-        if (textColor != mTextColorPrimary) {
-            int textColorSecondary = Utils.getColorAttrDefaultColor(mContext,
-                    android.R.attr.textColorSecondary);
-            mTextColorPrimary = textColor;
-            mClockView.setTextColor(textColor);
-            if (mTintedIconManager != null) {
-                mTintedIconManager.setTint(textColor);
-            }
-            mBatteryRemainingIcon.updateColors(mTextColorPrimary, textColorSecondary,
-                    mTextColorPrimary);
-        }
-
         MarginLayoutParams qqsLP = (MarginLayoutParams) mHeaderQsPanel.getLayoutParams();
                 qqsLP.topMargin = largeScreenHeaderActive || !mUseCombinedQSHeader
                 ? mContext.getResources().getDimensionPixelSize(R.dimen.qqs_layout_margin_top)
                 : SystemBarUtils.getQuickQsOffsetHeight(mContext);
-        mHeaderQsPanel.setLayoutParams(qqsLP);
-
-        updateBatteryMode();
-        updateHeadersPadding();
-        updateAnimators();
-
-        updateClockDatePadding();
-    }
-
-    private void updateClockDatePadding() {
-        int startPadding = mContext.getResources()
-                .getDimensionPixelSize(R.dimen.status_bar_left_clock_starting_padding);
-        int endPadding = mContext.getResources()
-                .getDimensionPixelSize(R.dimen.status_bar_left_clock_end_padding);
-        mClockView.setPaddingRelative(
-                startPadding,
-                mClockView.getPaddingTop(),
-                endPadding,
-                mClockView.getPaddingBottom()
-        );
-
-        MarginLayoutParams lp = (MarginLayoutParams) mClockDateView.getLayoutParams();
-        lp.setMarginStart(endPadding);
-        mClockDateView.setLayoutParams(lp);
-    }
-
-    private void updateAnimators() {
-        if (mUseCombinedQSHeader) {
-            mTranslationAnimator = null;
-            return;
-        }
-        updateAlphaAnimator();
-        int offset = mTopViewMeasureHeight;
-
-        mTranslationAnimator = new TouchAnimator.Builder()
-                .addFloat(mContainer, "translationY", 0, offset)
-                .setInterpolator(mQSExpansionPathInterpolator != null
-                        ? mQSExpansionPathInterpolator.getYInterpolator()
-                        : null)
-                .build();
-    }
-
-    private void updateAlphaAnimator() {
-        if (mUseCombinedQSHeader) {
-            mAlphaAnimator = null;
-            return;
-        }
-        TouchAnimator.Builder builder = new TouchAnimator.Builder()
-                // These views appear on expanding down
-                .addFloat(mDateView, "alpha", 0, 0, 1)
-                .addFloat(mClockDateView, "alpha", 1, 0, 0)
-                .addFloat(mQSCarriers, "alpha", 0, 1)
-                .setListener(new TouchAnimator.ListenerAdapter() {
-                    @Override
-                    public void onAnimationAtEnd() {
-                        super.onAnimationAtEnd();
-                        if (!mIsSingleCarrier) {
-                            mIconContainer.addIgnoredSlots(mRssiIgnoredSlots);
-                        }
-                        // Make it gone so there's enough room for carrier names
-                        mClockDateView.setVisibility(View.GONE);
-                    }
-
-                    @Override
-                    public void onAnimationStarted() {
-                        mClockDateView.setVisibility(View.VISIBLE);
-                        mClockDateView.setFreezeSwitching(true);
-                        setSeparatorVisibility(false);
-                        if (!mIsSingleCarrier) {
-                            mIconContainer.addIgnoredSlots(mRssiIgnoredSlots);
-                        }
-                    }
-
-                    @Override
-                    public void onAnimationAtStart() {
-                        super.onAnimationAtStart();
-                        mClockDateView.setFreezeSwitching(false);
-                        mClockDateView.setVisibility(View.VISIBLE);
-                        setSeparatorVisibility(mShowClockIconsSeparator);
-                        // In QQS we never ignore RSSI.
-                        mIconContainer.removeIgnoredSlots(mRssiIgnoredSlots);
-                    }
-                });
-        mAlphaAnimator = builder.build();
-    }
-
-    void setChipVisibility(boolean visibility) {
-        if (visibility) {
-            // Animates the icons and battery indicator from alpha 0 to 1, when the chip is visible
-            mIconsAlphaAnimator = mIconsAlphaAnimatorFixed;
-            mIconsAlphaAnimator.setPosition(mKeyguardExpansionFraction);
+        if (largeScreenHeaderActive) {
+            qqsLP.topMargin = mContext.getResources()
+                    .getDimensionPixelSize(R.dimen.qqs_layout_margin_top);
         } else {
-            mIconsAlphaAnimator = null;
-            mIconContainer.setAlpha(1);
-            mBatteryRemainingIcon.setAlpha(1);
+            qqsLP.topMargin = mContext.getResources()
+                    .getDimensionPixelSize(R.dimen.large_screen_shade_header_min_height);
         }
-
+        mHeaderQsPanel.setLayoutParams(qqsLP);
     }
 
-    /** */
     public void setExpanded(boolean expanded, QuickQSPanelController quickQSPanelController) {
         if (mExpanded == expanded) return;
         mExpanded = expanded;
         quickQSPanelController.setExpanded(expanded);
-        updateEverything();
-    }
-
-    /**
-     * Animates the inner contents based on the given expansion details.
-     *
-     * @param forceExpanded whether we should show the state expanded forcibly
-     * @param expansionFraction how much the QS panel is expanded/pulled out (up to 1f)
-     * @param panelTranslationY how much the panel has physically moved down vertically (required
-     *                          for keyguard animations only)
-     */
-    public void setExpansion(boolean forceExpanded, float expansionFraction,
-                             float panelTranslationY) {
-        final float keyguardExpansionFraction = forceExpanded ? 1f : expansionFraction;
-
-        if (mAlphaAnimator != null) {
-            mAlphaAnimator.setPosition(keyguardExpansionFraction);
-        }
-        if (mTranslationAnimator != null) {
-            mTranslationAnimator.setPosition(keyguardExpansionFraction);
-        }
-        if (mIconsAlphaAnimator != null) {
-            mIconsAlphaAnimator.setPosition(keyguardExpansionFraction);
-        }
-        // If forceExpanded (we are opening QS from lockscreen), the animators have been set to
-        // position = 1f.
-        if (forceExpanded) {
-            setAlpha(expansionFraction);
-        } else {
-            setAlpha(1);
-        }
-
-        mKeyguardExpansionFraction = keyguardExpansionFraction;
     }
 
     public void disable(int state1, int state2, boolean animate) {
@@ -437,7 +197,6 @@ public class QuickStatusBarHeader extends FrameLayout {
         if (disabled == mQsDisabled) return;
         mQsDisabled = disabled;
         mHeaderQsPanel.setDisabledByPolicy(disabled);
-        mStatusIconsView.setVisibility(mQsDisabled ? View.GONE : View.VISIBLE);
         updateResources();
     }
 
@@ -555,15 +314,5 @@ public class QuickStatusBarHeader extends FrameLayout {
         lp.setMarginStart(marginStart);
         lp.setMarginEnd(marginEnd);
         view.setLayoutParams(lp);
-    }
-
-    /**
-     * Scroll the headers away.
-     *
-     * @param scrollY the scroll of the QSPanel container
-     */
-    public void setExpandedScrollAmount(int scrollY) {
-        mStatusIconsView.setScrollY(scrollY);
-        mDatePrivacyView.setScrollY(scrollY);
     }
 }
